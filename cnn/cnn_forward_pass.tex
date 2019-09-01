@@ -1,0 +1,106 @@
+\documentclass[border=8pt, multi, tikz]{standalone} 
+\usepackage{import}
+\subimport{layers/}{init}
+\usetikzlibrary{positioning}
+
+\def\ConvColor{rgb:yellow,5;red,2.5;white,5}
+\def\ConvReluColor{rgb:yellow,5;red,5;white,5}
+\def\PoolColor{rgb:red,1;black,0.3}
+\def\UnpoolColor{rgb:blue,2;green,1;black,0.3}
+\def\FcColor{rgb:blue,5;red,2.5;white,5}
+\def\FcReluColor{rgb:blue,5;red,5;white,4}
+\def\SoftmaxColor{rgb:magenta,5;black,7}   
+
+\begin{document}
+\begin{tikzpicture}
+    \tikzstyle{connection}=[ultra thick,every node/.style={sloped,allow upside down},draw=\edgecolor,opacity=0.7]
+
+    \tikzstyle{neuron}=[circle,fill=cyan!75,minimum size=17pt,inner sep=0pt]
+    \tikzstyle{captionlabel}=[text width=5em,text centered]
+    \tikzstyle{box}=[rectangle,fill=olive!30,minimum size=17pt,inner sep=0pt]
+    \tikzstyle{annot} = [text width=7em, text centered]
+
+    \pic[shift={(0,0,0)}] at (0,0,0) 
+    {Box={
+        name=input,
+        caption=Input,
+        xlabel={{1, }},
+        zlabel=6,
+        fill=\ConvColor,
+        height=24,
+        width=1,
+        depth=24
+    }
+    };
+
+    \pic[shift={(0,0,0)}] at (4,0,0) 
+    {Box={
+        name=conv1,
+        caption=Convolution,
+        xlabel={{1, }},
+        zlabel=4,
+        fill=\ConvColor,
+        height=16,
+        width=1,
+        depth=16
+    }
+    };
+
+    \pic[shift={(0,0,0)}] at (8,0,0) 
+    {Box={
+        name=max_pool1,
+        caption=Max Pool,
+        xlabel={{1, }},
+        zlabel=2,
+        fill=\ConvColor,
+        height=8,
+        width=1,
+        depth=8
+    }
+    };
+
+    \foreach \i in {0,...,2}
+    \node[neuron] (fc-up\i) at (12, \i + 0.75) {};
+
+    \node (fc-ell) at (12, 0) {};
+    \foreach \i in {0,...,2}
+    \node[neuron] (fc-down\i) at (12, \i - 3) {};
+
+    \path (fc-up2) -- node[auto=false]{\vdots} (fc-down0);
+
+    % Softmax output
+    \foreach \i in {1,...,5}
+    \node[neuron] (softmax-\i) at (16, \i - 3) {};
+
+    \node[box, right of=softmax-3] (L) at (18, 0) {\tiny L};
+
+    % CONNECTIONS -- START
+    \draw [connection]  (input-east)    -- node {\midarrow} (conv1-west);
+
+    \draw [connection]  (conv1-east)    -- node {\midarrow} (max_pool1-west);
+
+    \draw [connection]  (max_pool1-east)    -- node {\midarrow} (fc-ell);
+
+    % Draw connections from fully connected layer to softmax
+    \foreach \i in {1,...,5} {
+        \draw[->] (softmax-\i) edge (L);
+        \foreach \j in {0,...,2} {
+            \draw[->] (fc-up\j) edge (softmax-\i);
+            \draw[->] (fc-down\j) edge (softmax-\i); 
+        }
+    }
+    % CONNECTIONS -- END
+
+    % ANNOTATIONS -- START
+    \node[below right=3em of conv1-north] {$out_{conv}$};
+    \node[below right=1.25em of max_pool1-north] {$out_{mp}$};
+
+    \node[above right=0.5em of fc-up2.east] {$out_{fc}$};
+    \node[below of=fc-down2,node distance=9em,captionlabel] {\textcolor{black}{ \bf Fully\\connected layer}};
+
+    \node[above right=0.5em of softmax-5.east] {$out_{s}$};
+    \node[below of=softmax-5,node distance=16em,captionlabel] {\textcolor{black}{ \bf Softmax}};
+    % ANNOTATIONS -- END
+
+\end{tikzpicture}
+\end{document}
