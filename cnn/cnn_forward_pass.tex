@@ -2,6 +2,11 @@
 \usepackage{import}
 \subimport{layers/}{init}
 \usetikzlibrary{positioning}
+\usetikzlibrary{3d} %for including external image 
+
+\tikzset{
+  font={\fontsize{15pt}{15}\selectfont}
+}
 
 \def\ConvColor{rgb:yellow,5;red,2.5;white,5}
 \def\ConvReluColor{rgb:yellow,5;red,5;white,5}
@@ -9,98 +14,169 @@
 \def\UnpoolColor{rgb:blue,2;green,1;black,0.3}
 \def\FcColor{rgb:blue,5;red,2.5;white,5}
 \def\FcReluColor{rgb:blue,5;red,5;white,4}
-\def\SoftmaxColor{rgb:magenta,5;black,7}   
+\def\SoftmaxColor{rgb:magenta,5;black,7}
 
-\begin{document}
-\begin{tikzpicture}
-    \tikzstyle{connection}=[ultra thick,every node/.style={sloped,allow upside down},draw=\edgecolor,opacity=0.7]
+\def\layerSeparation{5}
+\def\fcHalfNodes{4}
+\def\outputnodes{9}
 
-    \tikzstyle{neuron}=[circle,fill=cyan!75,minimum size=17pt,inner sep=0pt]
-    \tikzstyle{captionlabel}=[text width=5em,text centered]
-    \tikzstyle{box}=[rectangle,fill=olive!30,minimum size=17pt,inner sep=0pt]
-    \tikzstyle{annot} = [text width=7em, text centered]
+\tikzstyle{neuron}=[circle,draw=black,fill=cyan!75,line width=0.001mm,minimum size=3em,inner sep=0pt]
+\tikzstyle{connection}=[ultra thick,every node/.style={sloped,allow upside down},draw=\edgecolor,opacity=0.7] 
+\tikzstyle{connectionNN}=[->,draw=\edgecolor,opacity=0.7]
+\tikzstyle{captionlabel}=[text width=5em,text centered]
+\tikzstyle{box}=[rectangle,draw=black,fill=olive!30,minimum size=4.5em,inner sep=0pt]
+\tikzstyle{annot}=[font=\fontsize{17}{0}\selectfont,text width=7em, text centered]
 
-    \pic[shift={(0,0,0)}] at (0,0,0) 
-    {Box={
-        name=input,
-        caption=Input,
-        xlabel={{1, }},
-        zlabel=6,
-        fill=\ConvColor,
-        height=24,
-        width=1,
-        depth=24
-    }
-    };
+\newcommand{\inputLayer}{ 
+    \node[canvas is zy plane at x=0] (temp) at (\layerSeparation*0,0,0) {\includegraphics[width=6cm,height=6cm]{mnist_digit.png}};
+    \pic[shift={(0,0,0)}] at (0,0,0) {
+        Box={ 
+            name=input,
+            caption=Input,
+            xlabel={{1, }},
+            zlabel=28,
+            fill=white,
+            height=28,
+            width=1,
+            depth=28
+            } 
+        };
+}
 
-    \pic[shift={(0,0,0)}] at (4,0,0) 
+\newcommand{\convolutionLayer}{ 
+    \pic[shift={(0,0,0)}] at (\layerSeparation*1,0,0) 
     {Box={
         name=conv1,
         caption=Convolution,
-        xlabel={{1, }},
-        zlabel=4,
+        xlabel={{8, }},
+        zlabel=26,
         fill=\ConvColor,
-        height=16,
-        width=1,
-        depth=16
+        height=26,
+        width=8,
+        depth=26
     }
     };
+    \node[below right=5em of conv1-north] {$out_{conv}$};
+}
 
-    \pic[shift={(0,0,0)}] at (8,0,0) 
+\newcommand{\maxPoolLayer}{ 
+\pic[shift={(0,0,0)}] at (\layerSeparation*2,0,0) 
     {Box={
         name=max_pool1,
         caption=Max Pool,
-        xlabel={{1, }},
-        zlabel=2,
+        xlabel={{8, }},
+        zlabel=13,
         fill=\ConvColor,
-        height=8,
-        width=1,
-        depth=8
+        height=13,
+        width=8,
+        depth=13
     }
     };
+    \node[below right=1.25em of max_pool1-north] {$out_{mp}$};
+}
 
-    \foreach \i in {0,...,2}
-    \node[neuron] (fc-up\i) at (12, \i + 0.75) {};
 
-    \node (fc-ell) at (12, 0) {};
-    \foreach \i in {0,...,2}
-    \node[neuron] (fc-down\i) at (12, \i - 3) {};
+\newcommand{\fullyConnectedLayer}{ 
+    \foreach \i in {1,...,\fcHalfNodes}
+        \node[neuron] (fc-up\i) at (\layerSeparation*3, \i * 1.4) {};
+    
+    \node (fc-ell) at (\layerSeparation*3, 0) {\vdots};
+    \foreach \i in {1,...,\fcHalfNodes}
+        \node[neuron] (fc-down\i) at (\layerSeparation*3, \i * -1.4) {};
+    
+    \node[annot,above right=1em of fc-up\fcHalfNodes.east] {$out_{fc}$};
+    \node[below of=fc-down\fcHalfNodes,node distance=4em,captionlabel] {\textcolor{black}{ \bf Fully\\connected layer}}; 
+}
 
-    \path (fc-up2) -- node[auto=false]{\vdots} (fc-down0);
+\newcommand{\softmaxLayer}{ 
+    \foreach \i in {0,...,\outputnodes}
+        \node[neuron] (softmax-\i) at (\layerSeparation*4, \i * 1.4 - 6) {$p_{\i}$};
+    
+    \node[annot,above right=-1.5em of softmax-9.east] {$out_{s}$};
+    \node[below of=softmax-0,node distance=3em,captionlabel] {\textcolor{black}{ \bf Softmax}}; 
+}
 
-    % Softmax output
-    \foreach \i in {1,...,5}
-    \node[neuron] (softmax-\i) at (16, \i - 3) {};
+\newcommand{\lossLayer}{ 
+    \node[box, right of=softmax-3] (L) at (\layerSeparation*5, 0) {L};
+    \node[below of=L,node distance=4em,captionlabel] {\textcolor{black}{ \bf Loss}};
+}
 
-    \node[box, right of=softmax-3] (L) at (18, 0) {\tiny L};
+\begin{document}
+\begin{tikzpicture}
+    \inputLayer
 
-    % CONNECTIONS -- START
+    \convolutionLayer
+
     \draw [connection]  (input-east)    -- node {\midarrow} (conv1-west);
 
+    \maxPoolLayer
+
     \draw [connection]  (conv1-east)    -- node {\midarrow} (max_pool1-west);
+    \fullyConnectedLayer
 
     \draw [connection]  (max_pool1-east)    -- node {\midarrow} (fc-ell);
 
+    \softmaxLayer
+    
     % Draw connections from fully connected layer to softmax
-    \foreach \i in {1,...,5} {
-        \draw[->] (softmax-\i) edge (L);
-        \foreach \j in {0,...,2} {
-            \draw[->] (fc-up\j) edge (softmax-\i);
-            \draw[->] (fc-down\j) edge (softmax-\i); 
+    \foreach \i in {0,...,\outputnodes} {
+        \foreach \j in {1,...,\fcHalfNodes} {
+            \draw[connectionNN] (fc-up\j) edge (softmax-\i);
+            \draw[connectionNN] (fc-down\j) edge (softmax-\i); 
         }
     }
-    % CONNECTIONS -- END
 
-    % ANNOTATIONS -- START
-    \node[below right=3em of conv1-north] {$out_{conv}$};
-    \node[below right=1.25em of max_pool1-north] {$out_{mp}$};
+    \lossLayer
 
-    \node[above right=0.5em of fc-up2.east] {$out_{fc}$};
-    \node[below of=fc-down2,node distance=9em,captionlabel] {\textcolor{black}{ \bf Fully\\connected layer}};
+    \foreach \i in {0,...,\outputnodes} {
+        \draw[connectionNN] (softmax-\i) edge (L);
+    }
+\end{tikzpicture}
 
-    \node[above right=0.5em of softmax-5.east] {$out_{s}$};
-    \node[below of=softmax-5,node distance=16em,captionlabel] {\textcolor{black}{ \bf Softmax}};
-    % ANNOTATIONS -- END
+\begin{tikzpicture}
+    \inputLayer
 
+    \convolutionLayer
+
+    \draw [connection]  (input-east)    -- node {\midarrow} (conv1-west);
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    \convolutionLayer
+
+    \maxPoolLayer
+
+    \draw [connection]  (conv1-east)    -- node {\midarrow} (max_pool1-west);
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    \maxPoolLayer
+    \fullyConnectedLayer
+
+    \draw [connection]  (max_pool1-east)    -- node {\midarrow} (fc-ell);
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    \fullyConnectedLayer
+    
+    \softmaxLayer
+    
+    % Draw connections from fully connected layer to softmax
+    \foreach \i in {0,...,\outputnodes} {
+        \foreach \j in {1,...,\fcHalfNodes} {
+            \draw[connectionNN] (fc-up\j) edge (softmax-\i);
+            \draw[connectionNN] (fc-down\j) edge (softmax-\i); 
+        }
+    }
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    \softmaxLayer
+
+    \lossLayer
+
+    \foreach \i in {0,...,\outputnodes} {
+        \draw[connectionNN] (softmax-\i) edge (L);
+    }
 \end{tikzpicture}
 \end{document}

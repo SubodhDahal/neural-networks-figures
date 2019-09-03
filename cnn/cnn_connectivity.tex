@@ -9,69 +9,75 @@
 \def\layersep{0}
 \def\inactiveOpacity{0.3}
 \def\layernodes{5}
-\def\activenode{3}
-\def\displaymode{1} % 1 for forward pass, 2 for backward pass
+\def\activenode{0} % 0 for all nodes, other numerical value for specific node
+\def\displaymode{2} % 1 for forward pass, 2 for backward pass
 
 \tikzstyle{every pin edge}=[<-,shorten <=1pt]
 \tikzstyle{neuron}=[circle,opacity=0.3,fill=black!25,minimum size=17pt,inner sep=0pt]
-\tikzstyle{input neuron}=[neuron, fill=green!35]
+\tikzstyle{input neuron}=[neuron, fill=red!40]
 \tikzstyle{output neuron}=[neuron, fill=cyan!50]
 \tikzstyle{inactive}=[opacity=\inactiveOpacity]
 \tikzstyle{active}=[opacity=1]
 \tikzstyle{hide}=[opacity=0]
+
+\tikzstyle{w1color}=[color=red!50]
+\tikzstyle{w2color}=[color=green!100]
+\tikzstyle{w3color}=[color=blue!50]
 % Custom definitions -- END
 
 % Comparison of the network connectivity in general neural networks and convolutional neural networks
-\begin{tikzpicture}[shorten >=1pt,->,opacity=\inactiveOpacity,draw=black!50]
+\begin{tikzpicture}[line width=0.065em,shorten >=1pt,->,opacity=\inactiveOpacity,draw=black!50]
     % NODES -- START
     
     % Neural networks -- START
     \foreach \i in {1, ...,\layernodes}
-        \ifthenelse{\displaymode=2 \OR \i=\activenode}{\def\status{active}}{\def\status{}}
+        \ifthenelse{\displaymode=2 \OR \i=\activenode \OR \activenode=0}{\def\status{active}}{\def\status{}}
         \node[input neuron,\status] (NN-I-\i) at (0,-1.2 - \i) {\small $I_\i$};
 
     \foreach \i in {1, ...,\layernodes}
-        \ifthenelse{\displaymode=1 \OR \i=\activenode}{\def\status{active}}{\def\status{}}
+        \ifthenelse{\displaymode=1 \OR \i=\activenode \OR \activenode=0}{\def\status{active}}{\def\status{}}
         \node[output neuron,\status] (NN-O-\i) at (2,-1.2 - \i) {\small $O_\i$};
    
     % connections
     \foreach \source in {1,...,\layernodes}
         \foreach \dest in {1,...,\layernodes}
             \ifthenelse{\displaymode=2}{\def\target{\dest}}{\def\target{\source}}
-            \ifthenelse{\target=\activenode}{\def\status{active}}{\def\status{}}
+            \ifthenelse{\target=\activenode \OR \activenode=0}{\def\status{active}}{\def\status{}}
             \path (NN-I-\source) edge[\status] (NN-O-\dest);
     % Neural networks -- END
 
     % Convolutional Neural Networks -- START
     \foreach \i in {1, ...,\layernodes}
-        \ifthenelse{\i=\activenode}{\def\status{active}}{\def\status{}}
+        %\ifthenelse{\activenode=0 \OR \i=\activenode}{\def\status{active}}{\def\status{}} % Forward pass
+        \ifthenelse{\activenode=0 \OR \i=2 \OR \i=3 \OR \i=4}{\def\status{active}}{\def\status{}} % Backward pass
         \node[input neuron,\status] (CNN-I-\i) at (5,-1.2 - \i) {\small $I_\i$};
 
     \foreach \i in {1, ...,\layernodes}
-        \ifthenelse{\i=2 \OR \i=3 \OR \i=4}{\def\status{active}}{\def\status{}}
+        % \ifthenelse{\activenode=0 \OR \i=2 \OR \i=3 \OR \i=4}{\def\status{active}}{\def\status{}} % Forward pass
+        \ifthenelse{\activenode=0 \OR \i=\activenode}{\def\status{active}}{\def\status{}} % Backward pass
         \node[output neuron,\status] (CNN-O-\i) at (7,-1.2 - \i) {\small $O_\i$};
   
-    \path (CNN-I-1) edge (CNN-O-1);
-    \path (CNN-I-1) edge (CNN-O-2);
+    \path (CNN-I-1) edge[active,w2color] (CNN-O-1);
+    \path (CNN-I-1) edge[active,w3color] (CNN-O-2);
     
-    \path (CNN-I-2) edge (CNN-O-1);
-    \path (CNN-I-2) edge (CNN-O-2);
-    \path (CNN-I-2) edge (CNN-O-3);
+    \path (CNN-I-2) edge[active,w1color] (CNN-O-1);
+    \path (CNN-I-2) edge[active,w2color] (CNN-O-2);
+    \path (CNN-I-2) edge[active,w3color] (CNN-O-3);
 
-    \path (CNN-I-3) edge[active] (CNN-O-2);
-    \path (CNN-I-3) edge[active] (CNN-O-3);
-    \path (CNN-I-3) edge[active] (CNN-O-4);
+    \path (CNN-I-3) edge[active,w1color] (CNN-O-2);
+    \path (CNN-I-3) edge[active,w2color] (CNN-O-3);
+    \path (CNN-I-3) edge[active,w3color] (CNN-O-4);
     
-    \path (CNN-I-4) edge (CNN-O-3);
-    \path (CNN-I-4) edge (CNN-O-4);
-    \path (CNN-I-4) edge (CNN-O-5);
+    \path (CNN-I-4) edge[active,w1color] (CNN-O-3);
+    \path (CNN-I-4) edge[active,w2color] (CNN-O-4);
+    \path (CNN-I-4) edge[active,w3color] (CNN-O-5);
 
-    \path (CNN-I-4) edge (CNN-O-3);
-    \path (CNN-I-4) edge (CNN-O-4);
-    \path (CNN-I-4) edge (CNN-O-5);
+    \path (CNN-I-4) edge[active,w1color] (CNN-O-3);
+    \path (CNN-I-4) edge[active,w2color] (CNN-O-4);
+    \path (CNN-I-4) edge[active,w3color] (CNN-O-5);
 
-    \path (CNN-I-5) edge (CNN-O-4);
-    \path (CNN-I-5) edge (CNN-O-5);
+    \path (CNN-I-5) edge[active,w1color] (CNN-O-4);
+    \path (CNN-I-5) edge[active,w2color] (CNN-O-5);
 
    % \foreach \source in {1,...,\layernodes}
     %    \foreach \dest in {-1,...,1}
