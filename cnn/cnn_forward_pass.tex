@@ -8,34 +8,47 @@
   font={\fontsize{15pt}{15}\selectfont}
 }
 
-\def\ConvColor{rgb:yellow,5;red,2.5;white,5}
-\def\ConvReluColor{rgb:yellow,5;red,5;white,5}
-\def\PoolColor{rgb:red,1;black,0.3}
-\def\UnpoolColor{rgb:blue,2;green,1;black,0.3}
+\def\lineColor{black!90}
+\def\inputColor{rgb:yellow,3;green,2;red,1}
+\def\ConvColor{rgb:yellow,5;red,5;white,5}
+\def\PoolColor{rgb:blue,30;green,10}
 \def\FcColor{rgb:blue,5;red,2.5;white,5}
 \def\FcReluColor{rgb:blue,5;red,5;white,4}
 \def\SoftmaxColor{rgb:magenta,5;black,7}
+\def\LossColor{rgb:magenta,5;black,5}
 
 \def\layerSeparation{5}
-\def\fcHalfNodes{4}
-\def\outputnodes{9}
 
-\tikzstyle{neuron}=[circle,draw=black,fill=cyan!75,line width=0.001mm,minimum size=3em,inner sep=0pt]
-\tikzstyle{connection}=[ultra thick,every node/.style={sloped,allow upside down},draw=\edgecolor,opacity=0.7] 
-\tikzstyle{connectionNN}=[->,draw=\edgecolor,opacity=0.7]
+%\def\inputWidth{28}
+%\def\cnnWidth{26}
+%\def\filtersCount{8}
+%\def\maxPoolWidth{13}
+%\def\fcHalfNodes{4}
+%\def\outputnodes{9}
+
+\def\inputWidth{6}
+\def\cnnWidth{4}
+\def\filtersCount{1}
+\def\maxPoolWidth{2}
+\def\fcHalfNodes{3}
+\def\outputnodes{4}
+
+\tikzstyle{neuron}=[circle,draw=black,fill=cyan!65,line width=0.001mm,minimum size=3em,inner sep=0pt]
+\tikzstyle{connection}=[line width=0.5mm,every node/.style={sloped,allow upside down},draw=\lineColor,opacity=0.7] 
+\tikzstyle{connectionNN}=[->,line width=0.2mm,draw=\lineColor,opacity=0.7]
 \tikzstyle{captionlabel}=[text width=5em,text centered]
-\tikzstyle{box}=[rectangle,draw=black,fill=olive!30,minimum size=4.5em,inner sep=0pt]
+\tikzstyle{box}=[rectangle,draw=black,fill=\LossColor,opacity=0.5,minimum size=4.5em,inner sep=0pt]
 \tikzstyle{annot}=[font=\fontsize{17}{0}\selectfont,text width=7em, text centered]
 
 \newcommand{\inputLayer}{ 
-    \node[canvas is zy plane at x=0] (temp) at (\layerSeparation*0,0,0) {\includegraphics[width=6cm,height=6cm]{mnist_digit.png}};
+    %\node[canvas is zy plane at x=0] (temp) at (\layerSeparation*0,0,0) {\includegraphics[width=6cm,height=6cm]{mnist_digit.png}};
     \pic[shift={(0,0,0)}] at (0,0,0) {
         Box={ 
             name=input,
             caption=Input,
             xlabel={{1, }},
-            zlabel=28,
-            fill=white,
+            zlabel=\inputWidth,
+            fill=\inputColor,
             height=28,
             width=1,
             depth=28
@@ -48,15 +61,17 @@
     {Box={
         name=conv1,
         caption=Convolution,
-        xlabel={{8, }},
-        zlabel=26,
+        xlabel={{\filtersCount,}},
+        %xlabel={{,,,,\filtersCount,,,}},
+        zlabel=\cnnWidth,
         fill=\ConvColor,
         height=26,
-        width=8,
+        width=1,
+        %width={1,1,1,1,1,1,1,1},
         depth=26
     }
     };
-    \node[below right=5em of conv1-north] {$out_{conv}$};
+    \node[below right=7em of conv1-north] {$out_{conv}$};
 }
 
 \newcommand{\maxPoolLayer}{ 
@@ -64,15 +79,17 @@
     {Box={
         name=max_pool1,
         caption=Max Pool,
-        xlabel={{8, }},
-        zlabel=13,
-        fill=\ConvColor,
+        xlabel={{\filtersCount,}},
+        %xlabel={{,,,,\filtersCount,,,}},
+        zlabel=\maxPoolWidth,
+        fill=\PoolColor,
         height=13,
-        width=8,
+        width=1,
+        %width={1,1,1,1,1,1,1,1},
         depth=13
     }
     };
-    \node[below right=1.25em of max_pool1-north] {$out_{mp}$};
+    \node[below right=3em of max_pool1-north] {$out_{mp}$};
 }
 
 
@@ -90,9 +107,9 @@
 
 \newcommand{\softmaxLayer}{ 
     \foreach \i in {0,...,\outputnodes}
-        \node[neuron] (softmax-\i) at (\layerSeparation*4, \i * 1.4 - 6) {$p_{\i}$};
+        \node[neuron] (softmax-\i) at (\layerSeparation*4, \i * 1.4 - \outputnodes/2 - 0.5) {$p_{\i}$};
     
-    \node[annot,above right=-1.5em of softmax-9.east] {$out_{s}$};
+    \node[annot,above right=-1.5em of softmax-\outputnodes.east] {$out_{s}$};
     \node[below of=softmax-0,node distance=3em,captionlabel] {\textcolor{black}{ \bf Softmax}}; 
 }
 
