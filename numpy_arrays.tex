@@ -1,37 +1,67 @@
 \documentclass[convert={density=300,size=1200x800,outext=.png}]{standalone}
 
 \usepackage{tikz}
+\usetikzlibrary{quotes,arrows.meta}
 
 \tikzstyle{annot}=[font=\fontsize{17}{0}\selectfont,text width=7em, text centered]
 \tikzstyle{captionLabel}=[annot,font=\fontsize{20}{20}\selectfont,thick,text width=200]
 
-\newcommand{\threeDimMatrix}[4]{% width, height, depth, scale
+\newcommand{\threeDimMatrix}[5]{% width, height, depth, scale, caption
   \begin{tikzpicture}[scale=#4, line width=0.15em]
     \foreach \x in {0,...,#1}{
-      \draw (\x ,0  ,#3 ) -- (\x ,#2 ,#3 );
-      \draw (\x ,#2 ,#3 ) -- (\x ,#2 ,0  );
+      % vertical 2d
+      \draw (\x ,0  ,#3 ) coordinate (a-\x) -- (\x ,#2 ,#3 );
+
+      % vertical 3d
+      \draw (\x ,#2 ,#3 ) coordinate (b-\x) -- (\x ,#2 ,0  );
     }
 
     \foreach \x in {0,...,#2}{
-      \draw (#1 ,\x ,#3 ) -- (#1 ,\x ,0  );
-      \draw (0  ,\x ,#3 ) -- (#1 ,\x ,#3 );
+      % horizontal bottom 3d
+      \draw (#1 ,\x ,#3 ) coordinate (c-\x) -- (#1 ,\x ,0  );
+
+      % horizontal bottom
+      \draw (0  ,\x ,#3 ) coordinate (d-\x) -- (#1 ,\x ,#3 );
     }
 
     \foreach \x in {0,...,#3}{
-      \draw (#1 ,0  ,\x ) -- (#1 ,#2 ,\x );
-      \draw (0  ,#2 ,\x ) -- (#1 ,#2 ,\x );
+      %vertical end line
+      \draw (#1 ,0  ,\x ) coordinate (e-\x) -- (#1 ,#2 ,\x );
+
+      % horizontal top
+      \draw (0  ,#2 ,\x ) coordinate (f-\x) -- (#1 ,#2 ,\x );
     }
 
-    \node[annot] at (1.5, -1.5) {axis 0};
-    \node[annot] at (-2, 1) {axis 1};
-    \node[annot] at (-1.25, 3.65) {axis 2};
+    \path[every edge/.append style={|-|}] ([yshift=-10]a-0) coordinate(x) edge [annot,"axis 0"'] ([yshift=-10]a-#1);
 
-    \node[captionLabel] at (1.5, -2.5) {\bfseries 3D array};
+    \ifnum1<0#2
+      \path[every edge/.append style={|-|}] ([xshift=-10]d-0) coordinate(y) edge [annot,"axis 1"] ([xshift=-10]d-#2);
+    \fi
+
+    \def\xshiftValue{10}
+    \def\yshiftValue{-10}
+    \ifnum0<0#3
+      \path[every edge/.append style={|-|}] ([xshift=\xshiftValue,yshift=\yshiftValue] e-0) coordinate(z) edge [annot,"axis 2"] ([xshift=\xshiftValue,yshift=\yshiftValue]e-#3);
+    \fi
+
+    \node[captionLabel] at (1.5, -2.5) {\bfseries #5};
   \end{tikzpicture}
+}
+
+\newcommand{\twoDimMatrix}[4]{
+  \threeDimMatrix{#1}{#2}{0}{#3}{#4}
+}
+
+\newcommand{\oneDimMatrix}[3]{
+  \threeDimMatrix{#1}{1}{0}{#2}{#3}
 }
 
 \begin{document}
 
-\threeDimMatrix{5}{4}{3}{1.5}
+\oneDimMatrix{5}{1.5}{1D array}
+
+\twoDimMatrix{5}{4}{1.5}{2D array}
+
+\threeDimMatrix{5}{4}{3}{1.5}{3D array}
 
 \end{document}
