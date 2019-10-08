@@ -2,8 +2,10 @@
 
 \usepackage{tikz}
 \usetikzlibrary{quotes,arrows.meta}
+\usepackage{adjustbox}
 
-\tikzstyle{annot}=[font=\fontsize{17}{0}\selectfont,text width=7em, text centered]
+\tikzstyle{annot}=[font=\fontsize{17}{0}\selectfont, text centered]
+
 \tikzstyle{captionLabel}=[annot,font=\fontsize{20}{20}\selectfont,thick,text width=200]
 
 \newcommand{\threeDimMatrix}[5]{% width, height, depth, scale, caption
@@ -32,19 +34,20 @@
       \draw (0  ,#2 ,\x ) coordinate (f-\x) -- (#1 ,#2 ,\x );
     }
 
-    \path[every edge/.append style={|-|}] ([yshift=-10]a-0) coordinate(x) edge [annot,"axis 0"'] ([yshift=-10]a-#1);
-
     \ifnum1<0#2
-      \path[every edge/.append style={|-|}] ([xshift=-10]d-0) coordinate(y) edge [annot,"axis 1"] ([xshift=-10]d-#2);
+      \path[every edge/.append style={|-|}] ([yshift=-10]a-0) coordinate(x) edge [annot,"axis 1"'] ([yshift=-10]a-#1);
+      \path[every edge/.append style={|-|}] ([xshift=-10]d-0) coordinate(y) edge [annot,"axis 0"] ([xshift=-10]d-#2);
     \fi
 
     \def\xshiftValue{10}
     \def\yshiftValue{-10}
     \ifnum0<0#3
       \path[every edge/.append style={|-|}] ([xshift=\xshiftValue,yshift=\yshiftValue] e-0) coordinate(z) edge [annot,"axis 2"] ([xshift=\xshiftValue,yshift=\yshiftValue]e-#3);
+      \node[captionLabel] at (1.5, -2.5) {\bfseries #5};
+    \else
+    \node[captionLabel] at (2.5, -1.5) {\bfseries #5};
     \fi
 
-    \node[captionLabel] at (1.5, -2.5) {\bfseries #5};
   \end{tikzpicture}
 }
 
@@ -58,10 +61,26 @@
 
 \begin{document}
 
-\oneDimMatrix{5}{1.5}{1D array}
+%\fbox{
+\begin{tikzpicture}[line width=0.15em,scale=1.5]
+  \draw (0, -1) grid (-5, 0);
+  \node[captionLabel] at (-2.5, -2.5) {\bfseries 1D array};
+\end{tikzpicture}
+%}
+%\oneDimMatrix{5}{1.5}{1D array}
 
+%\fbox{
+\begin{adjustbox}{margin=2em}
 \twoDimMatrix{5}{4}{1.5}{2D array}
+\end{adjustbox}
+%}
 
+%\fbox{
 \threeDimMatrix{5}{4}{3}{1.5}{3D array}
-
+%}
+%\begin{tikzpicture}[line width=0.15em,scale=1.5]
+%$  \draw (0, 0) grid (-5, 4);
+%  \draw[yslant=0.25] (0,0) grid (3, 4);
+%  \draw[yslant=0,xslant=0.5] (-7, 4) grid (-2, 7);
+%\end{tikzpicture}
 \end{document}
