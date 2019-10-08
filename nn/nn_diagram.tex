@@ -1,56 +1,81 @@
 \documentclass[convert={density=300,size=1200x800,outext=.png}]{standalone}
 
 \usepackage{tikz}
+\usepackage{ifthen}
+
 \begin{document}
 \pagestyle{empty}
 
 % Custom definitions -- START
 \def\layersep{4cm}
-% \def\opacity{1}
 \def\opacity{0.15}
+
+\def\inactiveOpacity{0.3}
+\tikzstyle{inactive}=[opacity=\inactiveOpacity]
+\tikzstyle{active}=[opacity=1]
+\tikzstyle{hide}=[opacity=0]
+
+\tikzstyle{every pin edge}=[<-,shorten <=1pt]
+\tikzstyle{neuron}=[circle,fill=black!25,minimum size=17pt,inner sep=0pt]
+\tikzstyle{box}=[rectangle,fill=olive!30,minimum size=17pt,inner sep=0pt]
+\tikzstyle{input neuron}=[neuron, fill=red!35]
+\tikzstyle{hidden neuron}=[neuron, fill=cyan!50]
+\tikzstyle{hidden neuron activation}=[neuron, fill=cyan!50]
+\tikzstyle{output neuron}=[neuron, fill=orange!50]
+\tikzstyle{output neuron activation}=[neuron, fill=orange!50]
+\tikzstyle{annot} = [text width=7em, text centered]
 
 \def\inputlayernodes{2}
 \def\hiddenlayernodes{5}
+\def\activenode{1}
 % Custom definitions -- END
 
+\newcommand{\inputLayer}{
+  % NODES -- START
+  \node[input neuron, pin=left:\scriptsize Bias] (I-0) at (0,-1.2) {\small 1};
+
+  % Draw the input layer nodes
+  \foreach \i in {1,...,\inputlayernodes}
+    \node[input neuron, pin=left:\scriptsize Input param \#\i] (I-\i) at (0,-1.2 - \i * 1.2) {};
+}
+
+\newcommand{\hiddenLayer}{
+  \foreach \i in {1,...,\hiddenlayernodes}
+    \ifthenelse{\i=\activenode \OR \activenode=0}{\def\status{active}}{\def\status{inactive}}
+
+    \path[yshift=0.5cm]
+      node[hidden neuron,\status] (H-\i) at (\layersep * 0.65,-\i cm) {$\Sigma$};
+}
+
+\newcommand{\hiddenLayerActivation}{
+    \foreach \i in {1,...,\hiddenlayernodes}
+      \ifthenelse{\i=\activenode \OR \activenode=0}{\def\status{active}}{\def\status{inactive}}
+
+      \path[yshift=0.5cm]
+        node[hidden neuron activation,\status] (HA-\i) at (\layersep * 1.1,-\i cm) {\tiny ReLU};
+}
+
+\newcommand{\outputLayer}{
+    % Draw the output layer nodes
+    \node[output neuron, right of=H-3] (O) {$\Sigma$};
+    \node[output neuron, right of=H-3] (OA) at (\layersep * 1,-2.5) {\tiny ReLU};
+    \node[box, right of=H-3] (E) at (\layersep * 1.5,-2.5cm) {\tiny Error};
+    % \node[output neuron activation,pin={[pin edge={->}]right:\scriptsize Output}, right of=O] (OA) {\tiny ReLU};
+}
+
 \begin{tikzpicture}[shorten >=1pt,->,draw=black!50, node distance=\layersep]
-    \tikzstyle{every pin edge}=[<-,shorten <=1pt]
-    \tikzstyle{neuron}=[circle,fill=black!25,minimum size=17pt,inner sep=0pt]
-    \tikzstyle{box}=[rectangle,fill=olive!30,minimum size=17pt,inner sep=0pt]
-    \tikzstyle{input neuron}=[neuron, fill=red!35];
-    \tikzstyle{hidden neuron}=[neuron, fill=cyan!50];
-    \tikzstyle{hidden neuron activation}=[neuron, fill=cyan!50];
-    \tikzstyle{output neuron}=[neuron, fill=orange!50];
-    \tikzstyle{output neuron activation}=[neuron, fill=orange!50];
-    \tikzstyle{annot} = [text width=7em, text centered]
+    \inputLayer
 
-    % NODES -- START
-    \node[input neuron, pin=left:\scriptsize Bias] (I-0) at (0,-1.2) {\small 1};
+    \hiddenLayer
 
-    % Draw the input layer nodes
-    \foreach \i in {1,...,\inputlayernodes}
-        \node[input neuron, pin=left:\scriptsize Input param \#\i] (I-\i) at (0,-1.2 - \i * 1.2) {};
+    \hiddenLayerActivation
 
-    % Draw the hidden layer nodes
-    \path[yshift=0.5cm]
-            node[hidden neuron] (H-1) at (\layersep * 0.65,-1 cm) {$\Sigma$};
-    \foreach \i in {2,...,\hiddenlayernodes}
-        \path[yshift=0.5cm, opacity=\opacity]
-            node[hidden neuron] (H-\i) at (\layersep * 0.65,-\i cm) {$\Sigma$};
-
-    % Draw the hidden neuron activation layer nodes
-    \path[yshift=0.5cm]
-        node[hidden neuron activation] (HA-1) at (\layersep * 1.1,-1 cm) {\tiny ReLU};
-    \foreach \i in {2,...,\hiddenlayernodes}
-        \path[yshift=0.5cm, opacity=\opacity]
-            node[hidden neuron activation] (HA-\i) at (\layersep * 1.1,-\i cm) {\tiny ReLU};
+    $%\outputLayer
 
     % Draw the output layer nodes
     \node[output neuron, right of=H-3] (O) {$\Sigma$};
-    \node[output neuron, right of=H-3] (OA) at (\layersep * 1,-2.5cm) {\tiny ReLU};
+    \node[output neuron, right of=H-3] (OA) at (\layersep * 1,-2.5) {\tiny ReLU};
     \node[box, right of=H-3] (E) at (\layersep * 1.5,-2.5cm) {\tiny Error};
-    % \node[output neuron activation,pin={[pin edge={->}]right:\scriptsize Output}, right of=O] (OA) {\tiny ReLU};
-
     % NODES -- END
 
     % CONNECTIONS -- START
@@ -60,8 +85,8 @@
     \foreach \source in {0,...,\inputlayernodes}
         \path (I-\source) edge (H-1);
     \foreach \source in {0,...,\inputlayernodes}
-        \foreach \dest in {2,...,\hiddenlayernodes}
-            \path[opacity=\opacity] (I-\source) edge (H-\dest);
+      \foreach \dest in {2,...,\hiddenlayernodes}
+          \path[opacity=\opacity] (I-\source) edge (H-\dest);
 
     % Generic weight label for input to hidden layer
     % \draw (I-0) edge node [auto] {\small w$_{ih}$} (H-1);
@@ -72,9 +97,9 @@
     \draw (I-2) edge node [fill=white] {\small w$_{ih}^{20}$} (H-1);
 
     % Connect every node in the hidden layer with the output layer
-    \path (H-1) edge (HA-1);
-    \foreach \source in {2,...,\hiddenlayernodes}
-        \path[opacity=\opacity] (H-\source) edge (HA-\source);
+    %\path (H-1) edge (HA-1);
+    %\foreach \source in {2,...,\hiddenlayernodes}
+    %    \path[opacity=\opacity] (H-\source) edge (HA-\source);
 
     % Generic weight label for hidden layer to output layer
     % \draw (HA-1) edge node [auto] {\small w$_{ho}$} (O);
